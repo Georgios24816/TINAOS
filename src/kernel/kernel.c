@@ -7,6 +7,7 @@
 extern _interupt();
 int initialize_drivers()
 {
+    krnl_panic("Error");
     //Print that we are initializing drivers
     write_current_operation("initiliaze_drivers", "Initializing all drivers");
     //Initialize all pci devices

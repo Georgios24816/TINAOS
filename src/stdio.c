@@ -3,6 +3,8 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
+//Define kernel panic
+#define krnl_panic(...){make_vga_terminal();cprintf(red, "[KERNEL_PANIC] => Kernel panic in %s at function %s", __FILE__, __LINE__, __func__);cprintf(red, __VA_ARGS__);for(;;);}
 
 char tbuf[32];
 char bchars[] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};

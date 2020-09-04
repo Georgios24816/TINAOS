@@ -29,6 +29,7 @@
 #define ATA_COMMAND 0x07
 #define ATA_STATUS 0x07
 #define ATA_IDENTIFY 0xEC
+#define ATA_ALT_STATUS 0x0C
 
 #define ATA_BSY 0x80
 #define ATA_DRDY 0x40
@@ -43,4 +44,15 @@ uint8_t* ata_buffer = 0;
 
 //Device identifiers
 #define ATA_MODEL 54
+
+//Some device commands
+#define ATA_COMMAND_READ_PIO 0x20
+
+typedef struct
+{
+    char* drive_name;
+    uint8_t drive_id;
+    uint8_t (*read)(uint8_t* buffer, uint32_t lba, uint32_t sector_count, void* drive);
+    uint8_t (*write)(uint8_t *buffer, uint32_t offset, uint32_t buffer_length, void* drive);
+} ata_drive;
 #endif
