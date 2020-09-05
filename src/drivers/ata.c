@@ -32,19 +32,19 @@ void ata_read_once(uint8_t *buffer, uint32_t lba, ata_drive* device)
     uint16_t io = 0;
     switch(drive)
     {
-        case (PRIMARY_DRIVE << 1 | MASTER_DRIVE):
+        case (PRIMARY_BUS << 1 | MASTER_DRIVE):
             io = PRIMARY_IO;
             drive = MASTER_DRIVE;
             break;
-        case (PRIMARY_DRIVE << 1 | SLAVE_DRIVE):
+        case (PRIMARY_BUS << 1 | SLAVE_DRIVE):
             io = PRIMARY_IO;
             drive = SLAVE_DRIVE;
             break;
-        case (SECONDARY_DRIVE << 1 | MASTER_DRIVE):
+        case (SECONDARY_BUS << 1 | MASTER_DRIVE):
             io = SECONDARY_IO;
             drive = MASTER_DRIVE;
             break;
-        case (SECONDARY_DRIVE << 1 | SLAVE_DRIVE):
+        case (SECONDARY_BUS << 1 | SLAVE_DRIVE):
             io = SECONDARY_IO;
             drive = MASTER_DRIVE;
             break;
@@ -99,7 +99,7 @@ void ata_read(uint8_t *buffer, uint32_t lba, uint32_t sector_count, ata_drive* d
 void select_drive(uint8_t bus, uint8_t slot)
 {
     //Check if we are on the primary bus
-    if(bus == PRIMARY_DRIVE)
+    if(bus == PRIMARY_BUS)
     {
         //Check if slot is master
         if(slot == MASTER_DRIVE)
@@ -126,7 +126,7 @@ uint8_t identify_drive(uint8_t bus, uint8_t drive)
     //Select the drive
     select_drive(bus, drive);
     //Check if bus is primary
-    if(bus == PRIMARY_IO)
+    if(bus == PRIMARY_BUS)
         //Set io to primary drive
         io = PRIMARY_IO;
     else
@@ -147,6 +147,13 @@ uint8_t identify_drive(uint8_t bus, uint8_t drive)
     //Check if status != 0xFFFF
     if(status)
     {
+        //Check if an error occurred
+        if(status & ATA_ERR)
+        {
+            //Print that no drive was found on bus
+            cprintf(cyan, "[ATA] => identify_drive: No drive found on %s bus", bus==PRIMARY_BUS?"primary":"secondary");
+            return 0;
+        }
         //Notify that we will be polling now
         write_current_operation("identify_drive", "Polling drive until BSY bit is free");
         //Loop until BSY bit is free
@@ -158,12 +165,12 @@ read_status:    status = inb(io + ATA_STATUS);
         //Loop while DRQ is set, go to read_status
         while(!(status & ATA_DRQ)) goto read_status;
         //Print that the drive is online
-        cprintf(green, "[ATA] => identify_drive: %s drive is online", bus==PRIMARY_DRIVE?"Primary":"Secondary");
+        cprintf(green, "[ATA] => identify_drive: %s bus is online", bus==PRIMARY_BUS?"Primary":"Secondary");
         //Now we have to read the data
         for(int i = 0; i < 256; i++)
         {
             //Read into the ata buffer
-            *(uint16_t *)(ata_buffer + i * 2) = inw(io + ATA_DATA);
+            *(uint16_t *)(ata_buffer + (i * 2)) = inw(io + ATA_DATA);
         }
     }
 }
@@ -172,7 +179,7 @@ read_status:    status = inb(io + ATA_STATUS);
 void initiliaze_ata_driver()
 {
     //Probe for a primary drive
-    if(identify_drive(PRIMARY_DRIVE, MASTER_DRIVE))
+    if(identify_drive(PRIMARY_BUS, MASTER_DRIVE))
     {
         //Initiate a drive
         ata_drive *drive = (ata_drive*) malloc(sizeof(ata_drive*));
@@ -186,16 +193,13 @@ void initiliaze_ata_driver()
             //Set the drive data ahead
             drive_data[idx + 1] = ata_buffer[ATA_MODEL + idx];
         }
-        //Set the drive name
+        drive->drive_id = (PRIMARY_BUS << 1) | MASTER_DRIVE;
         drive->drive_name = drive_data;
-        //Set the drive id
-        drive->drive_id = (PRIMARY_DRIVE << 1) | MASTER_DRIVE;
-        //Set its read function
         drive->read = ata_read;
         //Print that we found a drive called drive_data
         cprintf(green, "[ATA] => initialize_ata_driver: Found primary drive called %s", drive_data);
     }
-    identify_drive(SECONDARY_DRIVE, SLAVE_DRIVE);
+    identify_drive(SECONDARY_BUS, SLAVE_DRIVE);
 }
 
 #endif

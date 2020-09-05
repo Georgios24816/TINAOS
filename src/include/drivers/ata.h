@@ -6,8 +6,8 @@
 #define VENDOR_ID 0x8086
 #define DEVICE_ID 0x7010
 
-#define PRIMARY_DRIVE 0x00
-#define SECONDARY_DRIVE 0x01
+#define PRIMARY_BUS 0x00
+#define SECONDARY_BUS 0x01
 #define MASTER_DRIVE 0x00
 #define SLAVE_DRIVE 0x01
 #define PRIMARY_IO 0x1F0
