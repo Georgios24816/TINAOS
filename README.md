@@ -8,3 +8,4 @@ Join our discord for updates, feature requests, and requests to join as contribu
 https://discord.gg/DWtFsMm
 
 This is Open Source Software for the community made by the community, come join us in an effort to make this OS bigger and better :D
+Test Georgios24816
